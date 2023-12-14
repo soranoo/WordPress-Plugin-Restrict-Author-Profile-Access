@@ -1,5 +1,7 @@
 # WordPress-Plugin-Restrict-Author-Profile-Access
 
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)&nbsp;&nbsp;&nbsp;[![Donation](https://img.shields.io/static/v1?label=Donation&message=❤️&style=social)](https://github.com/soranoo/Donation)
+
 A simple script to restrict others user access certaint author profile.
 
 This is my first WordPress plugin. I'm still learning how to write a good plugin. If you have any suggestion, please let me know. Thank you.
