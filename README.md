@@ -39,17 +39,17 @@ This is my first WordPress plugin. I'm still learning how to write a good plugin
 
 ## 📖 API Reference
 
+### Check if the author profile is restricted
+
 ```php
 wprapa_is_author_profile_restricted($author_id) : bool
 ```
-
-#### Input
 
 | Parameter    | Type  | Description |
 | :----------- | :---- | :---------- |
 | `$author_id` | `int` | Author ID.  |
 
-#### Return
+##### Return
 
 | Type   | Description                                                    |
 | :----- | :------------------------------------------------------------- |
@@ -60,6 +60,26 @@ wprapa_is_author_profile_restricted($author_id) : bool
 ```php
 $is_restricted_author = function_exists('wprapa_is_author_profile_restricted') ? wprapa_is_author_profile_restricted(get_the_author_meta('ID')) : false;
 ```
+
+### Add restricted author
+
+```php
+wprapa_add_restricted_author($author_id) : void
+```
+
+| Parameter    | Type  | Description |
+| :----------- | :---- | :---------- |
+| `$author_id` | `int` | Author ID.  |
+
+### Remove restricted author
+
+```php
+wprapa_remove_restricted_author($author_id) : void
+```
+
+| Parameter    | Type  | Description |
+| :----------- | :---- | :---------- |
+| `$author_id` | `int` | Author ID.  |
 
 ## 🐛 Known Issues
 

@@ -2,22 +2,26 @@
 /*
 Plugin Name: Restrict Author Profile Access
 Description: Restricts access to specified author profiles.
-Version: 1.0
+Version: 1.1
 Author: soranoo (Freeman)
 */
+
+//! ====================
+//! Setting
+//! ====================
 
 function restrict_author_profile_access()
 {
     // Check if it's an author page
-    if (is_author()) {        
+    if (is_author()) {
         // Get the current author ID
         $current_author_id = get_query_var('author');
-        
+
         // Get the current logged in user ID
         $current_user_id = get_current_user_id();
-        
+
         // Check if the current author is in the restricted list and the current user is not the author
-        if (wprapa_is_author_restricted($current_author_id) && $current_user_id != $current_author_id) {
+        if (wprapa_is_author_profile_restricted($current_author_id) && $current_user_id != $current_author_id) {
             // Return a 404 error
             global $wp_query;
             $wp_query->set_404();
@@ -42,7 +46,8 @@ add_action('admin_menu', 'restrict_author_profile_access_menu');
 
 
 // handle the form submission
-function restrict_author_profile_access_settings() {
+function restrict_author_profile_access_settings()
+{
     register_setting('restrict-author-profile-access-group', 'restricted_authors', function ($input) {
         // If the input is an array, convert it to a string
         if (is_array($input)) {
@@ -93,17 +98,7 @@ function remove_author()
 {
     // Check if the author ID is set
     if (isset($_POST['author_id'])) {
-        // Get the current restricted authors
-        $restricted_authors = get_option('restricted_authors', array());
-
-        // Remove the author ID from the array
-        $key = array_search($_POST['author_id'], $restricted_authors);
-        if ($key !== false) {
-            unset($restricted_authors[$key]);
-        }
-
-        // Update the restricted authors
-        update_option('restricted_authors', $restricted_authors);
+        wprapa_remove_restricted_author($_POST['author_id']);
 
         // Return a success response
         wp_send_json_success();
@@ -145,7 +140,7 @@ function restrict_author_profile_access_settings_page()
                     <td>
                         <?php
                         $restricted_authors = get_option('restricted_authors', array());
-                        
+
                         // visible input to select the authors
                         echo '<select name="restricted_authors[]" multiple="multiple" class="multi-author-select">';
                         $users = get_users();
@@ -157,7 +152,7 @@ function restrict_author_profile_access_settings_page()
                             }
                         }
                         echo '</select>';
-                        
+
                         // hidden input to save the selected authors
                         echo '<select name="restricted_authors[]" multiple="multiple" class="multi-author-select" id="saved-author-ids">';
                         $users = get_users();
@@ -175,10 +170,9 @@ function restrict_author_profile_access_settings_page()
                         <style>
                             /* apply display none to #saved-author-ids and the coming span */
                             #saved-author-ids,
-                            #saved-author-ids + span {
+                            #saved-author-ids+span {
                                 display: none;
                             }
-
                         </style>
                     </td>
                 </tr>
@@ -276,6 +270,11 @@ function sanitize_callback($input)
     return '';
 }
 
+
+//! ====================
+//! API
+//! ====================
+
 /**
  * Check if the author profile is restricted.
  * 
@@ -284,8 +283,10 @@ function sanitize_callback($input)
  * @return bool True if the author is restricted, false if not.
  
  */
-function wprapa_is_author_profile_restricted($author_id)
+function wprapa_is_author_profile_restricted($author_id) : bool
 {
+    $author_id = intval($author_id);
+
     // Get the restricted authors from the plugin settings
     $restricted_authors = get_option('restricted_authors', array());
 
@@ -297,4 +298,65 @@ function wprapa_is_author_profile_restricted($author_id)
     }
 }
 add_action('plugins_loaded', 'wprapa_is_author_profile_restricted');
+
+
+/**
+ * Add an author to the restricted list.
+ * 
+ * @param int $author_id The author ID.
+ */
+function wprapa_add_restricted_author($author_id)
+{
+    $author_id = intval($author_id);
+
+    // Check if the author id is a valid user
+    if (!get_userdata($author_id)) {
+        wp_send_json_error('Invalid author ID.');
+        return;
+    }
+
+    // Get the restricted authors from the plugin settings
+    $restricted_authors = get_option('restricted_authors', array());
+
+    // Add the author ID to the restricted authors
+    $restricted_authors[] = $author_id;
+
+    // Remove duplicate values
+    $restricted_authors = array_unique($restricted_authors);
+
+    // Update the restricted authors
+    update_option('restricted_authors', $restricted_authors);
+
+    wp_send_json_success();
+}
+add_action('wp_ajax_add_restricted_author', 'wprapa_add_restricted_author');
+
+
+/**
+ * Remove an author from the restricted list.
+ * 
+ * @param int $author_id The author ID.
+ */
+function wprapa_remove_restricted_author($author_id)
+{
+    $author_id = intval($author_id);
+
+    // Get the restricted authors from the plugin settings
+    $restricted_authors = get_option('restricted_authors', array());
+
+    // Remove the author ID from the array
+    $key = array_search($author_id, $restricted_authors);
+    if ($key !== false) {
+        unset($restricted_authors[$key]);
+    } else {
+        wp_send_json_error('Author ID not in the restricted list.');
+        return;
+    }
+
+    // Update the restricted authors
+    update_option('restricted_authors', $restricted_authors);
+
+    wp_send_json_success();
+}
+add_action('wp_ajax_remove_restricted_author', 'wprapa_remove_restricted_author');
 ?>
